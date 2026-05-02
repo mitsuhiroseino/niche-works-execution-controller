@@ -1,5 +1,3 @@
-import type { ExecutionControllerBaseOptions } from '../ExecutionControllerBase';
-import { SerialControllerType } from './constants';
+import type { ExecutionControllerBaseOptionsBase } from '../ExecutionControllerBase';
 
-export type SerialControllerOptions =
-  ExecutionControllerBaseOptions<SerialControllerType> & {};
+export type SerialControllerOptions = ExecutionControllerBaseOptionsBase;

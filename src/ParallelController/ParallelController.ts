@@ -1,5 +1,5 @@
 import type { LooseFunction } from '@niche-works/types';
-import FunctionControllerBase from '../ExecutionControllerBase';
+import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { ParallelControllerType } from './constants';
 import type { ParallelControllerOptions } from './types';
@@ -10,7 +10,7 @@ import type { ParallelControllerOptions } from './types';
  * 上限に達している間に呼ばれた関数はキューに蓄積され、\
  * 実行中のいずれかの処理が完了して枠が空き次第、順次開始される
  */
-export default class ParallelController extends FunctionControllerBase<ParallelControllerType> {
+export default class ParallelController extends ExecutionControllerBase<ParallelControllerType> {
   /**
    * 同時実行の上限数
    */
@@ -28,7 +28,8 @@ export default class ParallelController extends FunctionControllerBase<ParallelC
   }> = [];
 
   constructor(options: ParallelControllerOptions) {
-    super(options);
+    // @ts-ignore
+    super({ ...options, type: ParallelControllerType });
     // デフォルトは4
     this._limit = options.limit ?? 4;
   }

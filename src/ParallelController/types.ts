@@ -1,7 +1,5 @@
-import type { ExecutionControllerBaseOptions } from '../ExecutionControllerBase';
-import { ParallelControllerType } from './constants';
+import type { ExecutionControllerBaseOptionsBase } from '../ExecutionControllerBase';
 
-export type ParallelControllerOptions =
-  ExecutionControllerBaseOptions<ParallelControllerType> & {
-    limit: number;
-  };
+export type ParallelControllerOptions = ExecutionControllerBaseOptionsBase & {
+  limit: number;
+};

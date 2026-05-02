@@ -3,22 +3,37 @@ import type { MethodKeys, MethodType } from '../_types';
 import { CANCEL } from '../constants';
 import type {
   AwaitedReturn,
-  AwaitedReturnFunction,
   ControllerFunction,
   FunctionController,
 } from '../types';
 import type { CancelPolicy, ExecutionControllerBaseOptions } from './types';
 
 /**
+ * ポリシーに応じた戻り値の型を判定する
+ */
+type PolicyAwareReturn<
+  F extends LooseFunction,
+  P extends CancelPolicy,
+> = P extends 'resolve' ? ReturnType<F> | typeof CANCEL : ReturnType<F>;
+
+/**
+ * ポリシーに応じた関数型を判定する
+ */
+type PolicyAwareFunction<F extends LooseFunction, P extends CancelPolicy> = (
+  ...args: Parameters<F>
+) => Promise<PolicyAwareReturn<F, P>>;
+
+/**
  * コントローラーの基底クラス
  */
 export default abstract class ExecutionControllerBase<
   T extends string,
+  P extends CancelPolicy = 'ignore',
 > implements FunctionController<T> {
   /**
    * コントローラー種別
    */
-  private _type: T;
+  protected _type: T;
 
   /**
    * ID
@@ -35,10 +50,10 @@ export default abstract class ExecutionControllerBase<
    */
   private _running = 0;
 
-  constructor(options: ExecutionControllerBaseOptions<T>) {
+  constructor(options: ExecutionControllerBaseOptions<T, P>) {
     this._type = options.type;
     this._id = options.id;
-    this._cancelPolicy = options.cancelPolicy ?? 'resolve';
+    this._cancelPolicy = options.cancelPolicy ?? 'ignore';
   }
 
   /**
@@ -113,33 +128,29 @@ export default abstract class ExecutionControllerBase<
    */
   private _applyPolicy<T extends LooseFunction>(
     wrapedFn: ControllerFunction<T>,
-    scope: unknown | null,
-  ): AwaitedReturnFunction<T> {
+    scope?: unknown | null,
+  ): PolicyAwareFunction<T, P> {
     const cancelPolicy = this._cancelPolicy;
 
-    return function (this: unknown, ...args: Parameters<T>): AwaitedReturn<T> {
-      return new Promise((resolve, reject) => {
-        wrapedFn(scope ?? this, args)
-          .then((result) => {
-            if (cancelPolicy === 'resolve') {
-              // キャンセルをresolveで受け取る場合
-              resolve(result);
-            } else if (cancelPolicy === 'reject') {
-              // キャンセルをrejectで受け取る場合
-              if (result === CANCEL) {
-                reject(CANCEL);
-              } else {
-                resolve(result);
-              }
-            } else {
-              // キャンセル時に何もしない場合
-              if (result !== CANCEL) {
-                resolve(result);
-              }
-            }
-          })
-          .catch(reject);
-      });
+    return async function (
+      this: unknown,
+      ...args: Parameters<T>
+    ): Promise<any> {
+      const result = await wrapedFn(scope !== undefined ? scope : this, args);
+
+      if (result === CANCEL) {
+        if (cancelPolicy === 'reject') {
+          throw CANCEL;
+        }
+        if (cancelPolicy === 'ignore') {
+          // 解決しないPromiseを返して呼び出し側を待機状態にする
+          return new Promise(() => {});
+        }
+        // resolveの場合はそのままCANCELを返す
+        return CANCEL;
+      } else {
+        return result;
+      }
     };
   }
 
@@ -149,15 +160,14 @@ export default abstract class ExecutionControllerBase<
    * @param fn
    * @returns
    */
-  wrapFunction<T extends LooseFunction>(
+  wrap<T extends LooseFunction>(
     fn: T | null | undefined,
-  ): AwaitedReturnFunction<T> | undefined {
+  ): PolicyAwareFunction<T, P> | undefined {
     if (!fn) {
       return undefined;
     }
 
-    // scopeをnullにすることで、呼び出し時点のthisをscopeとして使用する
-    return this._applyPolicy(this._wrap(fn), null);
+    return this._applyPolicy(this._wrap(fn));
   }
 
   /**
@@ -173,7 +183,7 @@ export default abstract class ExecutionControllerBase<
   wrapMethod<I extends object, K extends MethodKeys<I>>(
     instance: I,
     method: K,
-  ): AwaitedReturnFunction<MethodType<I, K>> | undefined {
+  ): PolicyAwareFunction<MethodType<I, K>, P> | undefined {
     const fn = instance[method];
     if (typeof fn !== 'function') {
       return undefined;
@@ -183,7 +193,7 @@ export default abstract class ExecutionControllerBase<
     return this._applyPolicy(
       this._wrap(fn as LooseFunction),
       instance,
-    ) as AwaitedReturnFunction<MethodType<I, K>>;
+    ) as PolicyAwareFunction<MethodType<I, K>, P>;
   }
 
   /**

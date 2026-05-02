@@ -1,6 +1,6 @@
 import type { LooseFunction } from '@niche-works/types';
 import { CANCEL } from '../constants';
-import FunctionControllerBase from '../ExecutionControllerBase';
+import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { CapacityControllerType } from './constants';
 import type { CapacityControllerOptions } from './types';
@@ -10,14 +10,15 @@ import type { CapacityControllerOptions } from './types';
  * 同時実行できる上限数（limit）を設け、その範囲内で並行実行する\
  * 上限に達している状態で呼ばれた関数は破棄される
  */
-export default class CapacityController extends FunctionControllerBase<CapacityControllerType> {
+export default class CapacityController extends ExecutionControllerBase<CapacityControllerType> {
   /**
    * 同時実行の上限数
    */
   private _limit: number;
 
   constructor(options: CapacityControllerOptions) {
-    super(options);
+    // @ts-ignore
+    super({ ...options, type: CapacityControllerType });
     // デフォルトは 4 枠
     this._limit = options.limit ?? 4;
   }

@@ -1,5 +1,3 @@
-import type { ExecutionControllerBaseOptions } from '../ExecutionControllerBase';
-import { ExclusiveControllerType } from './constants';
+import type { ExecutionControllerBaseOptionsBase } from '../ExecutionControllerBase';
 
-export type ExclusiveControllerOptions =
-  ExecutionControllerBaseOptions<ExclusiveControllerType> & {};
+export type ExclusiveControllerOptions = ExecutionControllerBaseOptionsBase;

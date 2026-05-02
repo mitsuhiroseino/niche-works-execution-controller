@@ -1,6 +1,6 @@
 import type { LooseFunction } from '@niche-works/types';
 import { CANCEL } from '../constants';
-import FunctionControllerBase from '../ExecutionControllerBase';
+import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { DebounceControllerType } from './constants';
 import type { DebounceControllerOptions } from './types';
@@ -10,7 +10,7 @@ import type { DebounceControllerOptions } from './types';
  * 指定時間内に再呼び出しがなければ実行。
  * 前回の実行が完了していない場合は、完了を待ってから連続して実行します。
  */
-export default class DebounceController extends FunctionControllerBase<DebounceControllerType> {
+export default class DebounceController extends ExecutionControllerBase<DebounceControllerType> {
   // 待ち時間
   private _wait: number;
 
@@ -32,7 +32,8 @@ export default class DebounceController extends FunctionControllerBase<DebounceC
 
   constructor(options: DebounceControllerOptions) {
     const { wait, sequential, ...rest } = options;
-    super(rest);
+    // @ts-ignore
+    super({ ...rest, type: DebounceControllerType });
     this._wait = wait ?? 0;
     this._sequential = sequential ?? false;
   }

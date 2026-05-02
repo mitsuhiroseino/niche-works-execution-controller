@@ -1,7 +1,5 @@
-import type { ExecutionControllerBaseOptions } from '../ExecutionControllerBase';
-import { CapacityControllerType } from './constants';
+import type { ExecutionControllerBaseOptionsBase } from '../ExecutionControllerBase';
 
-export type CapacityControllerOptions =
-  ExecutionControllerBaseOptions<CapacityControllerType> & {
-    limit?: number;
-  };
+export type CapacityControllerOptions = ExecutionControllerBaseOptionsBase & {
+  limit?: number;
+};

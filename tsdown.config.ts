@@ -48,6 +48,10 @@ export default defineConfig({
             import: './types.mjs',
             require: './types.cjs',
           },
+          './isCancelError': {
+            import: './isCancelError.mjs',
+            require: './isCancelError.cjs',
+          },
         },
       },
     }),

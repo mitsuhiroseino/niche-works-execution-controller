@@ -1,5 +1,5 @@
 import type { LooseFunction } from '@niche-works/types';
-import FunctionControllerBase from '../ExecutionControllerBase';
+import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { SerialControllerType } from './constants';
 import type { SerialControllerOptions } from './types';
@@ -12,14 +12,15 @@ const noop = () => {};
  * 実行中に関数が呼ばれた場合、それらはキュー（待ち行列）に追加され、\
  * 現在の処理が完了し次第、古い順から順次実行される
  */
-export default class SerialController extends FunctionControllerBase<SerialControllerType> {
+export default class SerialController extends ExecutionControllerBase<SerialControllerType> {
   /**
    * 最後に実行した関数のpromise
    */
   private _tail: Promise<void> = Promise.resolve();
 
   constructor(options: SerialControllerOptions) {
-    super(options);
+    // @ts-ignore
+    super({ ...options, type: SerialControllerType });
   }
 
   _wrap<T extends LooseFunction>(fn: T): ControllerFunction<T> {

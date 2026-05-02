@@ -1,6 +1,6 @@
 import type { LooseFunction } from '@niche-works/types';
 import { CANCEL } from '../constants';
-import FunctionControllerBase from '../ExecutionControllerBase';
+import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { ExclusiveControllerType } from './constants';
 import type { ExclusiveControllerOptions } from './types';
@@ -10,9 +10,10 @@ import type { ExclusiveControllerOptions } from './types';
  * 同時に一つの関数のみ実行を許可する\
  * すでに実行中の関数がある場合、新しく呼び出された関数は実行されず破棄される
  */
-export default class ExclusiveController extends FunctionControllerBase<ExclusiveControllerType> {
+export default class ExclusiveController extends ExecutionControllerBase<ExclusiveControllerType> {
   constructor(options: ExclusiveControllerOptions) {
-    super(options);
+    // @ts-ignore
+    super({ ...options, type: ExclusiveControllerType });
   }
 
   _wrap<T extends LooseFunction>(fn: T): ControllerFunction<T> {

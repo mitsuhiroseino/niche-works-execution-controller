@@ -1,6 +1,6 @@
 import type { LooseFunction } from '@niche-works/types';
 import { CANCEL } from '../constants';
-import FunctionControllerBase from '../ExecutionControllerBase';
+import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { ThrottleControllerType } from './constants';
 import type { ThrottleControllerOptions } from './types';
@@ -10,7 +10,7 @@ import type { ThrottleControllerOptions } from './types';
  * 最初に関数を実行した後、指定時間（wait）が経過するまで次の実行を禁止する\
  * クールタイム中に呼ばれた関数は無視される\
  */
-export default class ThrottleController extends FunctionControllerBase<ThrottleControllerType> {
+export default class ThrottleController extends ExecutionControllerBase<ThrottleControllerType> {
   // 待ち時間
   private _wait: number;
 
@@ -29,7 +29,8 @@ export default class ThrottleController extends FunctionControllerBase<ThrottleC
 
   constructor(options: ThrottleControllerOptions) {
     const { wait, sequential, ...rest } = options;
-    super(rest);
+    // @ts-ignore
+    super({ ...rest, type: ThrottleControllerType });
     this._wait = wait ?? 0;
     this._sequential = sequential ?? false;
   }

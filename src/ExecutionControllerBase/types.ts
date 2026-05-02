@@ -1,9 +1,16 @@
-export type ExecutionControllerBaseOptions<T extends string> = {
+export type ExecutionControllerBaseOptions<
+  T extends string,
+  P extends CancelPolicy = 'ignore',
+> = ExecutionControllerBaseOptionsBase<P> & {
   /**
    * グループ種別
    */
   type?: T;
+};
 
+export type ExecutionControllerBaseOptionsBase<
+  P extends CancelPolicy = CancelPolicy,
+> = {
   /**
    * グループID
    */
@@ -12,13 +19,13 @@ export type ExecutionControllerBaseOptions<T extends string> = {
   /**
    * 関数の実行がキャンセルされた場合の動作
    *
+   * - 'ignore': 何もしない
    * - 'resolve': 正常処理の戻り値にCANCELを返す
    * - 'reject': 例外処理の戻り値にCANCELを返す
-   * - 'ignore': 何もしない
    *
-   * @default 'resolve'
+   * @default 'ignore'
    */
-  cancelPolicy?: CancelPolicy;
+  cancelPolicy?: P;
 };
 
-export type CancelPolicy = 'resolve' | 'reject' | 'ignore';
+export type CancelPolicy = 'ignore' | 'resolve' | 'reject';

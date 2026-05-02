@@ -47,7 +47,7 @@ export interface FunctionController<T extends string> {
    * 関数をラップする
    * @param fn
    */
-  wrapFunction<T extends LooseFunction>(
+  wrap<T extends LooseFunction>(
     fn: T | null | undefined,
   ): AwaitedReturnFunction<T> | null | undefined;
 
@@ -56,8 +56,8 @@ export interface FunctionController<T extends string> {
    * @param instance
    * @param method
    */
-  wrapMethod<TInstance extends object, TKey extends MethodKeys<TInstance>>(
-    instance: TInstance,
-    method: TKey,
-  ): AwaitedReturnFunction<MethodType<TInstance, TKey>> | undefined;
+  wrapMethod<I extends object, K extends MethodKeys<I>>(
+    instance: I,
+    method: K,
+  ): AwaitedReturnFunction<MethodType<I, K>> | undefined;
 }
