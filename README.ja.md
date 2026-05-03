@@ -1,6 +1,6 @@
-# @niche-works/execution-control
+# @niche-works/execution-controller
 
-`@niche-works/execution-control` は関数の実行タイミングや同時実行数を高度に制御するためのニッチなライブラリです。\
+`@niche-works/execution-controller` は関数の実行タイミングや同時実行数を高度に制御するためのニッチなライブラリです。\
 Debounce, Throttle, Serial, Parallel, Exclusive など、\
 実際の開発現場で頻出する実行制御パターンを統一されたインターフェースで提供します。
 
@@ -16,7 +16,7 @@ Debounce, Throttle, Serial, Parallel, Exclusive など、\
 ## インストール
 
 ```sh
-npm install @niche-works/execution-control
+npm install @niche-works/execution-controller
 ```
 
 ## コントローラー一覧
@@ -34,8 +34,8 @@ npm install @niche-works/execution-control
 
 ### 基本的な関数のラップ
 
-```typescript
-import { CapacityController } from '@niche-works/execution-control';
+```ts
+import { CapacityController } from '@niche-works/execution-controller';
 
 const controller = new CapacityController({
   id: 'api-limit',
@@ -57,8 +57,8 @@ const result3 = await fetchData(3); // 実行枠がいっぱいなので CANCEL 
 
 クラスのメソッドに対して this のコンテキストを維持したままラップできます。
 
-```typescript
-import { DebounceController } from '@niche-works/execution-control';
+```ts
+import { DebounceController } from '@niche-works/execution-controller';
 
 class SearchComponent {
   private controller = new DebounceController({
@@ -79,7 +79,7 @@ class SearchComponent {
 
 ## API
 
-@niche-works/execution-control が提供する各クラスおよびインターフェースの詳細リファレンスです。
+@niche-works/execution-controller が提供する各クラスおよびインターフェースの詳細リファレンスです。
 
 ### 全コントローラー共通
 
@@ -179,7 +179,10 @@ wrapMethod<I, K>(instance: I, method: K): PolicyAwareFunction<...>
 
 #### CANCEL (Symbol / Constant)
 
-実行がスキップまたはキャンセルされた際、cancelPolicy: 'resolve' の場合に返される値、または 'reject' の場合にスローされる値です。
+実行がスキップまたはキャンセルされた際に、返されるまたはスローされる値です。
+
+- 返される場合: `cancelPolicy: 'resolve'`
+- スローされる場合: `cancelPolicy: 'reject'`
 
 ## ライセンス
 
