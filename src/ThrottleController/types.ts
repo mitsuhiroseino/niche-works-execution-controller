@@ -3,6 +3,7 @@ import type { ExecutionControllerBaseOptionsBase } from '../ExecutionControllerB
 export type ThrottleControllerOptions = ExecutionControllerBaseOptionsBase & {
   /**
    * 待機時間
+   * @default 240
    */
   wait?: number;
 
@@ -11,6 +12,8 @@ export type ThrottleControllerOptions = ExecutionControllerBaseOptionsBase & {
    *
    * - false: 完了を待たずに実行
    * - true: 完了を待ってから実行
+   *
+   * @default false
    */
   sequential?: boolean;
 };

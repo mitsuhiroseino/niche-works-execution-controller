@@ -11,6 +11,31 @@ describe('DebounceController', () => {
     vi.useRealTimers();
   });
 
+  it('デフォルト', async () => {
+    const controller = new DebounceController({
+      id: 'test',
+    });
+
+    const fn = vi.fn().mockResolvedValue('ok');
+    const wrapped = controller.wrap(fn);
+
+    const promise = wrapped!();
+
+    // 50ms経過（まだ実行されない）
+    vi.advanceTimersByTime(50);
+    expect(fn).not.toHaveBeenCalled();
+
+    // さらに200ms経過（合計250ms）
+    vi.advanceTimersByTime(200);
+    // 非同期処理を確実に回す
+    await vi.runAllTicks();
+    await vi.runAllTicks();
+
+    const result = await promise;
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(result).toBe('ok');
+  });
+
   it('指定した待ち時間（wait）後に実行されること', async () => {
     const controller = new DebounceController({
       id: 'test',
@@ -73,12 +98,12 @@ describe('DebounceController', () => {
         sequential: false,
       });
 
-      let runningCount = 0;
+      let executingCount = 0;
       const fn = async () => {
-        runningCount++;
+        executingCount++;
         // 実行中の待機
         await new Promise((res) => setTimeout(res, 50));
-        runningCount--;
+        executingCount--;
       };
 
       const wrapped = controller.wrap(fn);
@@ -88,7 +113,7 @@ describe('DebounceController', () => {
       vi.advanceTimersByTime(10);
       await vi.runAllTicks();
       await vi.runAllTicks();
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // 2回目の実行を仕込む
       vi.advanceTimersByTime(20);
@@ -98,7 +123,7 @@ describe('DebounceController', () => {
       await vi.runAllTicks();
 
       // 同時に2つ動いている
-      expect(runningCount).toBe(2);
+      expect(executingCount).toBe(2);
 
       vi.advanceTimersByTime(50);
       await vi.runAllTicks();
@@ -112,14 +137,14 @@ describe('DebounceController', () => {
         sequential: true,
       });
 
-      let runningCount = 0;
+      let executingCount = 0;
       const fn = async () => {
-        runningCount++;
+        executingCount++;
         // fn自体の実行時間(50ms)
         await new Promise((res) => {
           setTimeout(res, 50);
         });
-        runningCount--;
+        executingCount--;
       };
 
       const wrapped = controller.wrap(fn);
@@ -129,7 +154,7 @@ describe('DebounceController', () => {
       vi.advanceTimersByTime(10);
       await vi.runAllTicks();
       await vi.runAllTicks();
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // 1回目が実行中(現在時刻10ms)に、2回目を仕込む
       vi.advanceTimersByTime(20); // 時刻30ms
@@ -139,7 +164,7 @@ describe('DebounceController', () => {
       await vi.runAllTicks();
 
       // sequential: true なので、1回目が終わるまで2回目は開始されない
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // 1回目が終わる時間（10ms + 50ms = 60ms）まで進める
       vi.advanceTimersByTime(20); // 時刻60ms
@@ -150,13 +175,13 @@ describe('DebounceController', () => {
       await vi.runAllTicks(); // executeの内部処理
 
       // 1回目が終わり、2回目が始まっているはず
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // 全て完了（2回目の50msが終わるまで）
       vi.advanceTimersByTime(50);
       await vi.runAllTicks();
       await vi.runAllTicks();
-      expect(runningCount).toBe(0);
+      expect(executingCount).toBe(0);
     });
   });
 });

@@ -26,7 +26,7 @@ describe('ExecutionControllerBase', () => {
   });
 
   describe('実行状態の管理', () => {
-    it('running カウントが実行中に増加し、終了後に減少すること', async () => {
+    it('executing カウントが実行中に増加し、終了後に減少すること', async () => {
       const controller = new TestController({ type: 'test', id: 'test' });
       let resolveFn: (val: string) => void;
       const promise = new Promise<string>((resolve) => {
@@ -36,14 +36,14 @@ describe('ExecutionControllerBase', () => {
       const wrapped = controller.wrap(async () => await promise);
 
       const execution = wrapped!();
-      expect(controller.running).toBe(1);
-      expect(controller.isRunning).toBe(true);
+      expect(controller.executing).toBe(1);
+      expect(controller.isExecuting).toBe(true);
 
       resolveFn!('done');
       await execution;
 
-      expect(controller.running).toBe(0);
-      expect(controller.isRunning).toBe(false);
+      expect(controller.executing).toBe(0);
+      expect(controller.isExecuting).toBe(false);
     });
   });
 
@@ -72,6 +72,29 @@ describe('ExecutionControllerBase', () => {
       const wrapped = controller.wrap(getName);
       const result = await wrapped!.call(context);
       expect(result).toBe('Context');
+    });
+  });
+
+  describe('対象なし', () => {
+    it('wrapMethod は対象のメソッドが関数であること', async () => {
+      const controller = new TestController({ type: 'test', id: 'test' });
+      const instance = {
+        name: 'MyInstance',
+        getName() {
+          return this.name;
+        },
+      };
+      instance.getName = 'MyInstance' as any;
+
+      const result = controller.wrapMethod(instance, 'getName');
+      expect(result).toBeUndefined();
+    });
+
+    it('wrap はnull,undefindでないこと', async () => {
+      const controller = new TestController({ type: 'test', id: 'test' });
+
+      const result = controller.wrap(null);
+      expect(result).toBeUndefined();
     });
   });
 

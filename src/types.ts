@@ -41,7 +41,7 @@ export interface FunctionController<T extends string> {
   /**
    * 実行中か
    */
-  get isRunning(): boolean;
+  get isExecuting(): boolean;
 
   /**
    * 関数をラップする

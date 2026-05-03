@@ -1,6 +1,30 @@
 import ParallelController from '../ParallelController';
 
 describe('ParallelController', () => {
+  it('デフォルト', async () => {
+    const controller = new ParallelController({
+      id: 'test',
+    });
+
+    const fn = vi.fn(() => new Promise((res) => setTimeout(res, 50)));
+    const wrapped = controller.wrap(fn);
+
+    // 5つ同時に呼び出す
+    const p1 = wrapped!();
+    const p2 = wrapped!();
+    const p3 = wrapped!();
+    const p4 = wrapped!();
+    const p5 = wrapped!();
+
+    // 即座に確認（4つだけが実行中で、1つはキュー待ち）
+    expect(controller.executing).toBe(4);
+    expect(fn).toHaveBeenCalledTimes(4);
+
+    await Promise.all([p1, p2, p3, p4, p5]);
+    expect(controller.executing).toBe(0);
+    expect(fn).toHaveBeenCalledTimes(5);
+  });
+
   it('指定された上限数（limit）まで並列実行できること', async () => {
     const limit = 3;
     const controller = new ParallelController({
@@ -19,11 +43,11 @@ describe('ParallelController', () => {
     const p5 = wrapped!();
 
     // 即座に確認（3つだけが実行中で、2つはキュー待ち）
-    expect(controller.running).toBe(limit);
+    expect(controller.executing).toBe(limit);
     expect(fn).toHaveBeenCalledTimes(limit);
 
     await Promise.all([p1, p2, p3, p4, p5]);
-    expect(controller.running).toBe(0);
+    expect(controller.executing).toBe(0);
     expect(fn).toHaveBeenCalledTimes(5);
   });
 
@@ -45,7 +69,7 @@ describe('ParallelController', () => {
     const p2 = controller.wrap(fnSecond)!();
 
     // まだ p1 が実行中なので p2 は呼ばれていない
-    expect(controller.running).toBe(1);
+    expect(controller.executing).toBe(1);
     expect(fnSecond).not.toHaveBeenCalled();
 
     // p1 を完了させる
@@ -72,7 +96,7 @@ describe('ParallelController', () => {
 
     // p1 失敗後も p2 は正常に実行される
     expect(await p2).toBe('ok');
-    expect(controller.running).toBe(0);
+    expect(controller.executing).toBe(0);
   });
 
   it('複数のタスクが完了した際に一気に枠が埋まること', async () => {
@@ -89,10 +113,10 @@ describe('ParallelController', () => {
       controller.wrap(() => new Promise((res) => setTimeout(res, 20)))!(),
     ];
 
-    expect(controller.running).toBe(2);
+    expect(controller.executing).toBe(2);
 
     await Promise.all(tasks);
-    expect(controller.running).toBe(0);
+    expect(controller.executing).toBe(0);
   });
 
   it('スコープと引数が正しく引き継がれること', async () => {

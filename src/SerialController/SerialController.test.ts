@@ -15,19 +15,22 @@ describe('SerialController', () => {
 
     const wrapped = controller.wrap(fn);
 
-    // 同時に3つ投下。実行時間はバラバラだが、投入順に終わるはず
+    // 同時に3つ投下
     const p1 = wrapped!(1, 30);
     const p2 = wrapped!(2, 10);
     const p3 = wrapped!(3, 5);
 
-    // この時点ではまだ何も終わっていない
-    expect(controller.running).toBe(1);
+    // 【重要】マイクロタスクを回して、1つ目のタスクの _start() を確実に実行させる
+    await Promise.resolve();
+
+    // これで executing が 1 になっているはず
+    expect(controller.isExecuting).toBe(true);
+    expect(controller.executing).toBe(1);
 
     await Promise.all([p1, p2, p3]);
 
-    // 実行順序が [1, 2, 3] であることを確認
     expect(results).toEqual([1, 2, 3]);
-    expect(controller.running).toBe(0);
+    expect(controller.executing).toBe(0);
   });
 
   it('前のタスクが完了するまで次のタスクが開始されないこと', async () => {

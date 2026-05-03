@@ -34,7 +34,7 @@ export default class DebounceController extends ExecutionControllerBase<Debounce
     const { wait, sequential, ...rest } = options;
     // @ts-ignore
     super({ ...rest, type: DebounceControllerType });
-    this._wait = wait ?? 0;
+    this._wait = wait ?? 240;
     this._sequential = sequential ?? false;
   }
 

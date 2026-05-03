@@ -48,7 +48,7 @@ export default abstract class ExecutionControllerBase<
   /**
    * 実行している関数の件数
    */
-  private _running = 0;
+  private _executing = 0;
 
   constructor(options: ExecutionControllerBaseOptions<T, P>) {
     this._type = options.type;
@@ -71,31 +71,31 @@ export default abstract class ExecutionControllerBase<
   }
 
   /**
-   * 実行している関数の件数
+   * 実行している関数・メソッドの件数
    */
-  get running(): number {
-    return this._running;
+  get executing(): number {
+    return this._executing;
   }
 
   /**
-   * 実行している関数の有無
+   * 実行している関数・メソッドの有無
    */
-  get isRunning(): boolean {
-    return this._running > 0;
+  get isExecuting(): boolean {
+    return this._executing > 0;
   }
 
   /**
    * 実行の開始
    */
   protected _start() {
-    this._running++;
+    this._executing++;
   }
 
   /**
    * 実行の終了
    */
   protected _finish() {
-    this._running--;
+    this._executing--;
   }
 
   /**

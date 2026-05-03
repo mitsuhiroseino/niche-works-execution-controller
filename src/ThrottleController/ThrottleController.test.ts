@@ -11,6 +11,33 @@ describe('ThrottleController', () => {
     vi.useRealTimers();
   });
 
+  it('デフォルト', async () => {
+    const controller = new ThrottleController({
+      id: 'test',
+    });
+
+    const fn = vi.fn().mockResolvedValue('ok');
+    const wrapped = controller.wrap(fn);
+
+    // 1回目の実行
+    const p1 = wrapped!();
+    await vi.runAllTicks(); // 非同期開始を待機
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    // クールタイム中の2回目
+    vi.advanceTimersByTime(50);
+    const p2 = wrapped!();
+    expect(fn).toHaveBeenCalledTimes(1); // 増えていないこと
+
+    // クールタイム明けの3回目
+    vi.advanceTimersByTime(200);
+    const p3 = wrapped!();
+    await vi.runAllTicks();
+    expect(fn).toHaveBeenCalledTimes(2);
+
+    expect(await p1).toBe('ok');
+  });
+
   it('初回実行は即座に行われ、指定時間（wait）内は次の呼び出しがキャンセルされること', async () => {
     const controller = new ThrottleController({
       id: 'test',
@@ -49,12 +76,12 @@ describe('ThrottleController', () => {
         sequential: false,
       });
 
-      let runningCount = 0;
+      let executingCount = 0;
       const fn = async () => {
-        runningCount++;
+        executingCount++;
         // 実行に150msかかる（waitの100msより長い）
         await new Promise((res) => setTimeout(res, 150));
-        runningCount--;
+        executingCount--;
       };
 
       const wrapped = controller.wrap(fn);
@@ -63,7 +90,7 @@ describe('ThrottleController', () => {
       wrapped!();
       vi.advanceTimersByTime(10);
       await vi.runAllTicks();
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // wait(100ms)経過後に2回目実行
       vi.advanceTimersByTime(100);
@@ -72,11 +99,11 @@ describe('ThrottleController', () => {
       await vi.runAllTicks();
 
       // sequential: false なので、1回目が終わる(150ms)前に2回目が始まり、並行数が2になる
-      expect(runningCount).toBe(2);
+      expect(executingCount).toBe(2);
 
       vi.advanceTimersByTime(200);
       await vi.runAllTicks();
-      expect(runningCount).toBe(0);
+      expect(executingCount).toBe(0);
     });
 
     it('sequential: true の場合、前回の実行完了を待ってから開始されること', async () => {
@@ -86,14 +113,14 @@ describe('ThrottleController', () => {
         sequential: true,
       });
 
-      let runningCount = 0;
+      let executingCount = 0;
       const results: string[] = [];
       const fn = async (name: string) => {
-        runningCount++;
+        executingCount++;
         // 実行に100ms
         await new Promise((res) => setTimeout(res, 100));
         results.push(name);
-        runningCount--;
+        executingCount--;
       };
 
       const wrapped = controller.wrap(fn);
@@ -102,7 +129,7 @@ describe('ThrottleController', () => {
       const p1 = wrapped!('first');
       vi.advanceTimersByTime(10);
       await vi.runAllTicks();
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // 50ms後（クールタイム明け）に2回目を呼ぶ
       vi.advanceTimersByTime(50);
@@ -110,7 +137,7 @@ describe('ThrottleController', () => {
       await vi.runAllTicks();
 
       // 1回目が終わるまで待機中
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
       expect(results).not.toContain('second');
 
       // 1回目の完了(100ms)まで進める
@@ -120,14 +147,14 @@ describe('ThrottleController', () => {
 
       // 2回目が始まっていることを確認
       expect(results).toContain('first');
-      expect(runningCount).toBe(1);
+      expect(executingCount).toBe(1);
 
       // 2回目の完了(さらに100ms)まで進める
       vi.advanceTimersByTime(100);
       await p2; // 2回目の完了を直接待機
 
       expect(results).toEqual(['first', 'second']);
-      expect(runningCount).toBe(0);
+      expect(executingCount).toBe(0);
     });
   });
 

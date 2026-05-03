@@ -38,7 +38,6 @@ npm install @niche-works/execution-control
 import { CapacityController } from '@niche-works/execution-control';
 
 const controller = new CapacityController({
-  type: 'capacity',
   id: 'api-limit',
   limit: 2,
   cancelPolicy: 'resolve',
@@ -63,7 +62,6 @@ import { DebounceController } from '@niche-works/execution-control';
 
 class SearchComponent {
   private controller = new DebounceController({
-    type: 'debounce',
     id: 'search',
     wait: 300,
   });
@@ -81,30 +79,108 @@ class SearchComponent {
 
 ## API
 
+@niche-works/execution-control が提供する各クラスおよびインターフェースの詳細リファレンスです。
+
 ### 全コントローラー共通
 
-#### コンストラクターオプション
+すべてのコントローラーは ExecutionControllerBase を継承しており、以下のプロパティとメソッドを共通で保持しています。
 
-| プロパティ     | 型       | 説明                                                                                        |
-| -------------- | -------- | ------------------------------------------------------------------------------------------- |
-| `type?`        | `string` | グループ種別                                                                                |
-| `id?`          | `string` | `styleProp` に既存のスタイルがある場合の適用方法（デフォルト: `merge`）                     |
-| `displayName?` | `string` | 作成するコンポーネントの`displayName`（デフォルト: `withLayout(${Component.displayName})`） |
+#### Constructor Options
 
-CancelPolicy
+| プロパティ      | 型                              | 説明                                       |
+| --------------- | ------------------------------- | ------------------------------------------ |
+| `id?`           | `string`                        | コントローラーのユニークID                 |
+| `cancelPolicy?` | [`CancelPolicy`](#CancelPolicy) | 実行制限時の挙動（デフォルト: `'ignore'`） |
 
-コントローラーが実行を制限した際の挙動を指定できます。
+#### Properties (Read-only)
 
-ignore (デフォルト): 返される Promise は Pending 状態のままになり、解決も拒否もされません。
+| プロパティ    | 型        | 説明                                          |
+| ------------- | --------- | --------------------------------------------- |
+| `type`        | `string`  | コントローラー種別を返します                  |
+| `id`          | `string`  | コントローラーのIDを返します                  |
+| `executing`   | `number`  | 現在実行中の関数の件数を返します              |
+| `isExecuting` | `boolean` | 1件以上の関数が実行中であれば true を返します |
 
-reject: CANCEL 定数（Symbol等）を理由に Promise をリジェクトします。
+#### Methods
 
-resolve: CANCEL 定数を戻り値として Promise を解決します。
+```ts
+wrap<F>(fn: F): PolicyAwareFunction<F, P>
+```
 
-Sequential オプション (Debounce / Throttle)
+関数をコントローラーの制御下にラップします。
 
-sequential: true を指定すると、待機時間が経過した後、「前回の関数の実行完了」を待ってから次を開始します。非同期処理の重なりを厳密に排除したい場合に有効です。
+- 引数: `fn`: ラップ対象の関数
+- 戻り値: 制御ロジックが追加された新しい関数
 
-ライセンス
+```ts
+wrapMethod<I, K>(instance: I, method: K): PolicyAwareFunction<...>
+```
+
+インスタンスのメソッドを、this コンテキストを維持したままラップします。
+
+- 引数:
+  - `instance`: メソッドを保持するオブジェクトインスタンス
+  - `method`: メソッド名の文字列
+- 戻り値: 制御ロジックが追加された新しい関数（this は instance に固定されます）
+
+### コントローラー固有
+
+#### CapacityController
+
+実行上限を超えた呼び出しを即座に破棄します。
+
+| プロパティ | 型       | 説明                            |
+| ---------- | -------- | ------------------------------- |
+| `limit?`   | `number` | 最大同時実行数（デフォルト: 4） |
+
+#### ExclusiveController
+
+実行中、他の呼び出しをすべて破棄します（CapacityController の limit: 1 相当）。\
+※ 固有オプションはありません。
+
+#### SerialController
+
+すべての呼び出しをキューに蓄積し、一つずつ順番に実行します。\
+※ 固有オプションはありません。
+
+#### ParallelController
+
+上限数まで並列実行し、それを超える分はキューに蓄積して空き次第実行します。
+
+| プロパティ | 型       | 説明                            |
+| ---------- | -------- | ------------------------------- |
+| `limit?`   | `number` | 最大同時実行数（デフォルト: 4） |
+
+#### DebounceController
+
+連続した呼び出しをグループ化し、最後の呼び出しから指定時間経過後に実行します。
+
+| プロパティ    | 型        | 説明                                                                       |
+| ------------- | --------- | -------------------------------------------------------------------------- |
+| `wait?`       | `number`  | 待機時間 (ms)（デフォルト: 240）                                           |
+| `sequential?` | `boolean` | true の場合、前回の実行完了を待ってから次を開始します（デフォルト: false） |
+
+#### ThrottleController
+
+一度実行すると、指定時間は次の実行を禁止します。
+
+| プロパティ    | 型        | 説明                                                                               |
+| ------------- | --------- | ---------------------------------------------------------------------------------- |
+| `wait?`       | `number`  | 禁止時間 (ms)（デフォルト: 240）                                                   |
+| `sequential?` | `boolean` | true の場合、前回の実行完了を待ってから次の許可判定を行います（デフォルト: false） |
+
+### 型 & 固定値
+
+#### CancelPolicy
+
+- `'ignore'`: Promise を解決せず、呼び出し側を待機状態（Pending）にします。
+- `'reject'`: CANCEL を理由に Promise をリジェクトします。
+- `'resolve'`: CANCEL を戻り値として Promise を解決します。
+
+#### CANCEL (Symbol / Constant)
+
+実行がスキップまたはキャンセルされた際、cancelPolicy: 'resolve' の場合に返される値、または 'reject' の場合にスローされる値です。
+
+## ライセンス
 
 MIT

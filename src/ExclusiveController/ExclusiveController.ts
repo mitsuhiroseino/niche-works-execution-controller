@@ -21,7 +21,7 @@ export default class ExclusiveController extends ExecutionControllerBase<Exclusi
     const execute = me._createExecutionFn(fn);
     return (scope: unknown, args: Parameters<T>): AwaitedReturn<T> => {
       // 実行しているものがあるかチェック
-      if (me.isRunning) {
+      if (me.isExecuting) {
         // あったらキャンセル
         return Promise.resolve(CANCEL);
       }

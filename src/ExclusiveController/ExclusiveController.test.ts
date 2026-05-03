@@ -18,7 +18,7 @@ describe('ExclusiveController', () => {
 
     // 1回目の呼び出し（実行開始）
     const p1 = wrapped!();
-    expect(controller.isRunning).toBe(true);
+    expect(controller.isExecuting).toBe(true);
     expect(fn).toHaveBeenCalledTimes(1);
 
     // 2回目の呼び出し（実行中のため破棄されるはず）
@@ -29,7 +29,7 @@ describe('ExclusiveController', () => {
     // 1回目を完了させる
     resolveTask!('done');
     expect(await p1).toBe('done');
-    expect(controller.isRunning).toBe(false);
+    expect(controller.isExecuting).toBe(false);
   });
 
   it('実行完了後は再び呼び出しが可能になること', async () => {
@@ -59,7 +59,7 @@ describe('ExclusiveController', () => {
     const wrapped = controller.wrap(fn);
 
     await expect(wrapped!()).rejects.toThrow('fail');
-    expect(controller.isRunning).toBe(false);
+    expect(controller.isExecuting).toBe(false);
 
     // エラー後も次が実行できること
     fn.mockResolvedValue('recovered');

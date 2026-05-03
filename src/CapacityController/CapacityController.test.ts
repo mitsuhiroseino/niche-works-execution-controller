@@ -13,7 +13,7 @@ describe('CapacityController', () => {
       );
       promises.push(wrapped!());
     }
-    expect(controller.running).toBe(4);
+    expect(controller.executing).toBe(4);
 
     // 5つ目はキャンセルされる (デフォルト policy は ignore なので解決しない。ここでは resolve ポリシーでテスト)
     const controllerResolve = new CapacityController({
@@ -56,7 +56,7 @@ describe('CapacityController', () => {
     )!();
 
     // 既に 2 つ実行中
-    expect(controller.running).toBe(2);
+    expect(controller.executing).toBe(2);
 
     // 3 つ目の呼び出し
     const task3 = controller.wrap(async () => 'ignored')!();
@@ -69,7 +69,7 @@ describe('CapacityController', () => {
     resolve2!('done2');
     await Promise.all([task1, task2]);
 
-    expect(controller.running).toBe(0);
+    expect(controller.executing).toBe(0);
   });
 
   it('タスク完了後に新しいタスクが実行可能になること', async () => {
@@ -83,13 +83,13 @@ describe('CapacityController', () => {
 
     // 1つ目
     const p1 = wrapped!('first');
-    expect(controller.running).toBe(1);
+    expect(controller.executing).toBe(1);
     expect(await p1).toBe('first');
-    expect(controller.running).toBe(0);
+    expect(controller.executing).toBe(0);
 
     // 1つ目が終わったので2つ目がいけるはず
     const p2 = wrapped!('second');
-    expect(controller.running).toBe(1);
+    expect(controller.executing).toBe(1);
     expect(await p2).toBe('second');
   });
 

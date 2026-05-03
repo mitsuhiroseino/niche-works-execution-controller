@@ -27,9 +27,13 @@ export default class SerialController extends ExecutionControllerBase<SerialCont
     const me = this;
     const execute = me._createExecutionFn(fn);
     return (scope: unknown, args: Parameters<T>): AwaitedReturn<T> => {
-      // fnを非同期で呼び出す関数
-      // 前の処理がどう終わろうと、クリーンな状態で execute を開始する
-      const promise = me._tail.finally(noop).then(() => execute(scope, args));
+      // 現在の_tailを退避
+      const currentTail = me._tail;
+      // 実行関数を定義
+      const run = () => execute(scope, args);
+      // _tail が解決済み（実行中でない）なら即座に実行を開始し、
+      // そうでなければ then の中で実行する
+      const promise = me.isExecuting ? currentTail.then(run) : run();
       // エラーでも次が続けられるようにnoopを仕込んでおく
       me._tail = promise.then(noop).catch(noop);
 

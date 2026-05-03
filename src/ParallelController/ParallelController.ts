@@ -63,17 +63,12 @@ export default class ParallelController extends ExecutionControllerBase<Parallel
    */
   private async _process() {
     // 実行枠が空いていない、または待ち行列が空なら何もしない
-    if (this.running >= this._limit || this._queue.length === 0) {
+    if (this.executing >= this._limit || this._queue.length === 0) {
       return;
     }
 
     // キューから先頭を取り出す
-    const item = this._queue.shift();
-    if (!item) {
-      return;
-    }
-
-    const { execute, scope, args, resolve, reject } = item;
+    const { execute, scope, args, resolve, reject } = this._queue.shift();
 
     // 実行開始（非同期）
     execute(scope, args)

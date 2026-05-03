@@ -31,7 +31,7 @@ export default class ThrottleController extends ExecutionControllerBase<Throttle
     const { wait, sequential, ...rest } = options;
     // @ts-ignore
     super({ ...rest, type: ThrottleControllerType });
-    this._wait = wait ?? 0;
+    this._wait = wait ?? 240;
     this._sequential = sequential ?? false;
   }
 

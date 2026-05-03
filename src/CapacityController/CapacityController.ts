@@ -33,7 +33,7 @@ export default class CapacityController extends ExecutionControllerBase<Capacity
 
     return (scope: unknown, args: Parameters<T>): AwaitedReturn<T> => {
       // 現在の実行数が上限に達しているかチェック
-      if (me.running >= me._limit) {
+      if (me.executing >= me._limit) {
         // 実行せずに終了
         return Promise.resolve(CANCEL);
       }
