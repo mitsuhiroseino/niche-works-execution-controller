@@ -103,6 +103,8 @@ class SearchComponent {
 
 #### Methods
 
+##### wrap
+
 ```ts
 wrap<F>(fn: F): PolicyAwareFunction<F, P>
 ```
@@ -111,6 +113,8 @@ wrap<F>(fn: F): PolicyAwareFunction<F, P>
 
 - 引数: `fn`: ラップ対象の関数
 - 戻り値: 制御ロジックが追加された新しい関数
+
+##### wrapMethod
 
 ```ts
 wrapMethod<I, K>(instance: I, method: K): PolicyAwareFunction<...>
