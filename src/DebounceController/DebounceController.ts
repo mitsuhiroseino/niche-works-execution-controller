@@ -1,4 +1,4 @@
-import type { LooseFunction } from '@niche-works/types';
+import type { SyncLooseFunction } from '@niche-works/types';
 import { CANCEL } from '../constants';
 import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
@@ -38,7 +38,7 @@ export default class DebounceController extends ExecutionControllerBase<Debounce
     this._sequential = sequential ?? false;
   }
 
-  _wrap<T extends LooseFunction>(fn: T): ControllerFunction<T> {
+  _wrap<T extends SyncLooseFunction>(fn: T): ControllerFunction<T> {
     const me = this;
     const execute = me._createExecutionFn(fn);
 

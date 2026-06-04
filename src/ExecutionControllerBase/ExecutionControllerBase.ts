@@ -1,4 +1,4 @@
-import type { LooseFunction } from '@niche-works/types';
+import type { SyncLooseFunction } from '@niche-works/types';
 import type { MethodKeys, MethodType } from '../_types';
 import { CANCEL } from '../constants';
 import type {
@@ -12,16 +12,17 @@ import type { CancelPolicy, ExecutionControllerBaseOptions } from './types';
  * ポリシーに応じた戻り値の型を判定する
  */
 type PolicyAwareReturn<
-  F extends LooseFunction,
+  F extends SyncLooseFunction,
   P extends CancelPolicy,
 > = P extends 'resolve' ? ReturnType<F> | typeof CANCEL : ReturnType<F>;
 
 /**
  * ポリシーに応じた関数型を判定する
  */
-type PolicyAwareFunction<F extends LooseFunction, P extends CancelPolicy> = (
-  ...args: Parameters<F>
-) => Promise<PolicyAwareReturn<F, P>>;
+type PolicyAwareFunction<
+  F extends SyncLooseFunction,
+  P extends CancelPolicy,
+> = (...args: Parameters<F>) => Promise<PolicyAwareReturn<F, P>>;
 
 /**
  * コントローラーの基底クラス
@@ -104,7 +105,7 @@ export default abstract class ExecutionControllerBase<
    * @param fn 対象の関数
    * @returns
    */
-  protected _createExecutionFn<T extends LooseFunction>(fn: T) {
+  protected _createExecutionFn<T extends SyncLooseFunction>(fn: T) {
     // 開始終了を捕捉できる非同期の関数
     return async (scope: unknown, args: unknown[]) => {
       try {
@@ -126,7 +127,7 @@ export default abstract class ExecutionControllerBase<
    * @param scope 固定するスコープ。nullの場合は呼び出し時点のthisを使用する
    * @returns
    */
-  private _applyPolicy<T extends LooseFunction>(
+  private _applyPolicy<T extends SyncLooseFunction>(
     wrapedFn: ControllerFunction<T>,
     scope?: unknown | null,
   ): PolicyAwareFunction<T, P> {
@@ -142,12 +143,12 @@ export default abstract class ExecutionControllerBase<
         if (cancelPolicy === 'reject') {
           throw CANCEL;
         }
-        if (cancelPolicy === 'ignore') {
-          // 解決しないPromiseを返して呼び出し側を待機状態にする
-          return new Promise(() => {});
+        if (cancelPolicy === 'resolve') {
+          // resolveの場合はそのままCANCELを返す
+          return CANCEL;
         }
-        // resolveの場合はそのままCANCELを返す
-        return CANCEL;
+        // 解決しないPromiseを返して呼び出し側を待機状態にする
+        return new Promise(() => {});
       } else {
         return result;
       }
@@ -160,7 +161,7 @@ export default abstract class ExecutionControllerBase<
    * @param fn
    * @returns
    */
-  wrap<T extends LooseFunction>(
+  wrap<T extends SyncLooseFunction>(
     fn: T | null | undefined,
   ): PolicyAwareFunction<T, P> | undefined {
     if (!fn) {
@@ -191,7 +192,7 @@ export default abstract class ExecutionControllerBase<
 
     // scopeをinstanceに固定することで、メソッドのthisが失われない
     return this._applyPolicy(
-      this._wrap(fn as LooseFunction),
+      this._wrap(fn as SyncLooseFunction),
       instance,
     ) as PolicyAwareFunction<MethodType<I, K>, P>;
   }
@@ -200,7 +201,7 @@ export default abstract class ExecutionControllerBase<
    * 関数をラップする
    * @param fn
    */
-  protected abstract _wrap<T extends LooseFunction>(
+  protected abstract _wrap<T extends SyncLooseFunction>(
     fn: T,
   ): ControllerFunction<T>;
 }

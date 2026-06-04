@@ -55,6 +55,7 @@ export default defineConfig({
           },
         },
       },
+      resolveWorkspaceDeps: true,
     }),
     copy({
       targets: [

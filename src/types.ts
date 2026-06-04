@@ -1,25 +1,25 @@
-import type { LooseFunction } from '@niche-works/types';
+import type { SyncLooseFunction } from '@niche-works/types';
 import type { MethodKeys, MethodType } from './_types';
 import { CANCEL } from './constants';
 
 /**
  * 戻り値(promise)
  */
-export type AwaitedReturn<T extends LooseFunction> =
+export type AwaitedReturn<T extends SyncLooseFunction> =
   | Promise<ReturnType<T>>
   | Promise<typeof CANCEL>;
 
 /**
  * 汎用的な関数をラップしてpromiseの戻り値を返す関数
  */
-export type AwaitedReturnFunction<T extends LooseFunction> = (
+export type AwaitedReturnFunction<T extends SyncLooseFunction> = (
   ...args: Parameters<T>
 ) => AwaitedReturn<T>;
 
 /**
  * コントローラーの関数
  */
-export type ControllerFunction<T extends LooseFunction> = (
+export type ControllerFunction<T extends SyncLooseFunction> = (
   scope: unknown,
   args: Parameters<T>,
 ) => AwaitedReturn<T>;
@@ -47,7 +47,7 @@ export interface FunctionController<T extends string> {
    * 関数をラップする
    * @param fn
    */
-  wrap<T extends LooseFunction>(
+  wrap<T extends SyncLooseFunction>(
     fn: T | null | undefined,
   ): AwaitedReturnFunction<T> | null | undefined;
 

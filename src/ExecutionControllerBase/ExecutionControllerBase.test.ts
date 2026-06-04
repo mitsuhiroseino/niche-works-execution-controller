@@ -1,4 +1,4 @@
-import type { LooseFunction } from '@niche-works/types';
+import type { SyncLooseFunction } from '@niche-works/types';
 import { CANCEL } from '../constants';
 import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { ControllerFunction } from '../types';
@@ -9,7 +9,7 @@ class TestController<
 > extends ExecutionControllerBase<'test', P> {
   public shouldCancel = false;
 
-  protected _wrap<F extends LooseFunction>(fn: F): ControllerFunction<F> {
+  protected _wrap<F extends SyncLooseFunction>(fn: F): ControllerFunction<F> {
     const executionFn = this._createExecutionFn(fn);
     return async (scope, args) => {
       if (this.shouldCancel) return CANCEL;

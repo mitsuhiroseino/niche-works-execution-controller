@@ -1,4 +1,4 @@
-import type { LooseFunction } from '@niche-works/types';
+import type { SyncLooseFunction } from '@niche-works/types';
 import ExecutionControllerBase from '../ExecutionControllerBase';
 import type { AwaitedReturn, ControllerFunction } from '../types';
 import { ParallelControllerType } from './constants';
@@ -37,7 +37,7 @@ export default class ParallelController extends ExecutionControllerBase<Parallel
   /**
    * 関数をラップする
    */
-  _wrap<T extends LooseFunction>(fn: T): ControllerFunction<T> {
+  _wrap<T extends SyncLooseFunction>(fn: T): ControllerFunction<T> {
     const me = this;
     const execute = me._createExecutionFn(fn);
 
